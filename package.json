@@ -1,24 +1,35 @@
 {
-  "name": "lru-cache",
-  "description": "A cache object that deletes the least-recently-used items.",
+  "name": "stale-lru-cache",
+  "description": "Fork of lru-cache that adds support for stale-while-revalidate cache control",
   "version": "3.2.0",
-  "author": "Isaac Z. Schlueter <i@izs.me>",
+  "author": {
+    "name": "Thomas Heymann",
+    "email": "thom@totheskies.net"
+  },
   "keywords": [
     "mru",
     "lru",
-    "cache"
+    "cache",
+    "stale-while-revalidate",
+    "stale",
+    "revalidate",
+    "cache-control"
   ],
   "scripts": {
     "test": "tap test --gc"
   },
   "main": "lib/lru-cache.js",
-  "repository": "git://github.com/isaacs/node-lru-cache.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyberthom/stale-lru-cache"
+  },
   "devDependencies": {
     "tap": "^1.2.0",
     "weak": ""
   },
   "license": "ISC",
   "dependencies": {
+    "parse-cache-control": "^1.0.1",
     "pseudomap": "^1.0.1"
   }
 }

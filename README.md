@@ -1,132 +1,155 @@
-# lru cache
+# Stale LRU Cache
 
-A cache object that deletes the least-recently-used items.
+[![Build Status via Travis CI](https://travis-ci.org/cyberthom/stale-lru-cache.svg?branch=master)](https://travis-ci.org/cyberthom/stale-lru-cache)
 
-## Usage:
+A fork of [lru-cache](https://www.npmjs.com/package/lru-cache) that adds support for `stale-while-revalidate` cache control.
+
+Comes with full support for non-string keys and values.
+
+
+## Usage
+
+#### Overview
 
 ```javascript
-var LRU = require("lru-cache")
-  , options = { max: 500
-              , length: function (n, key) { return n * 2 + key.length }
-              , dispose: function (key, n) { n.close() }
-              , maxAge: 1000 * 60 * 60 }
-  , cache = LRU(options)
-  , otherCache = LRU(50) // sets just the max size
+var LRU = require('stale-lru-cache');
 
-cache.set("key", "value")
-cache.get("key") // "value"
+var cache = LRU({
+    max: 100,
+    cacheControl: 'max-age=600, stale-while-revalidate=86400',
+    revalidate: function (key, callback) {
+        // ... after some async data fetching
+        callback(null, 'new value');
+    }
+});
 
-// non-string keys ARE fully supported
-var someObject = {}
-cache.set(someObject, 'a value')
-cache.set('[object Object]', 'a different value')
-assert.equal(cache.get(someObject), 'a value')
+cache.set('key', { some: 'value' });
+cache.get('key');
 
-cache.reset()    // empty the cache
+cache.set('another-key', 'another value', 'max-age=600, must-revalidate');
 ```
 
-If you put more stuff in it, then items will fall out.
+#### Helper
 
-If you try to put an oversized thing in it, then it'll fall out right
-away.
+There is also a `wrap(key, revalidate, callback)` helper (inspired by [cache-manager](https://www.npmjs.com/package/cache-manager)) to simplify the most common use-cases:
+
+```javascript
+var LRU = require('stale-lru-cache');
+var cache = LRU(100);
+
+cache.wrap('key', function (callback) {
+    // ... after some async data fetching
+    callback(null, 'new value', 'max-age=600, stale-while-revalidate=86400');
+}, function (error, value) {
+    // Do something with value
+});
+```
+
 
 ## Options
 
-* `max` The maximum size of the cache, checked by applying the length
-  function to all values in the cache.  Not setting this is kind of
-  silly, since that's the whole purpose of this lib, but it defaults
-  to `Infinity`.
-* `maxAge` Maximum age in ms.  Items are not pro-actively pruned out
-  as they age, but if you try to get an item that is too old, it'll
-  drop it and return undefined instead of giving it to you.
-* `length` Function that is used to calculate the length of stored
-  items.  If you're storing strings or buffers, then you probably want
-  to do something like `function(n, key){return n.length}`.  The default is
-  `function(){return 1}`, which is fine if you want to store `max`
-  like-sized things.  They item is passed as the first argument, and
-  the key is passed as the second argumnet.
-* `dispose` Function that is called on items when they are dropped
-  from the cache.  This can be handy if you want to close file
-  descriptors or do other cleanup tasks when items are no longer
-  accessible.  Called with `key, value`.  It's called *before*
-  actually removing the item from the internal cache, so if you want
-  to immediately put it back in, you'll have to do that in a
-  `nextTick` or `setTimeout` callback or it won't do anything.
-* `stale` By default, if you set a `maxAge`, it'll only actually pull
-  stale items out of the cache when you `get(key)`.  (That is, it's
-  not pre-emptively doing a `setTimeout` or anything.)  If you set
-  `stale:true`, it'll return the stale value before deleting it.  If
-  you don't set this, then it'll return `undefined` when you try to
-  get a stale entry, as if it had already been deleted.
+* `max` - Maximum cache size (default: Infinity)
+
+  Checked by applying the `length` function to all values in the cache. 
+
+* `cacheControl` - Cache control string
+
+  Use `max-age=<seconds>` to define when the item will expire.
+
+  Combine with `stale-while-revalidate=<seconds>` to set the time window after `max-age` has expired in which the item is marked as
+  stale but still usable. After both `max-age` and `stale-while-revalidate` have expired the item will be deleted from
+  cache.
+
+* `revalidate` - Function used to fetch stale items
+
+  Method has the following signature `function (key, callback)`. Its callback parameter should be called using: 
+  `callback(error, value
+  , [options])`.
+
+* `length` - Function used to calculate the length of stored items
+
+  If you're storing strings or buffers, then you probably want to do something like `function (n, key) { return n.length }`.
+  The default is `function () { return 1 }`, which is fine if you want to store `max` like-sized things. The item is passed
+  as the first argument, and the key is passed as the second argumnet.
+
+* `dispose` - Function called on items when they are dropped from the cache
+
+  This can be handy if you want to close file descriptors or do other cleanup tasks when items are no longer accessible.
+  Called with `key, value`. It's called *before* actually removing the item from the internal cache, so if you want to
+  immediately put it back in, you'll have to do that in a `nextTick` or `setTimeout` callback or it won't do anything.
+
 
 ## API
 
-* `set(key, value, maxAge)`
+* `set(key, value, [options])`
 * `get(key) => value`
 
-    Both of these will update the "recently used"-ness of the key.
-    They do what you think. `max` is optional and overrides the
-    cache `max` option if provided.
+  Both of these will update the "recently used"-ness of the key. They do what you think. `options` is optional and
+  overrides the cache's default `cacheControl` and `revalidate` settings on a per-item basis. 
 
 * `peek(key)`
 
-    Returns the key value (or `undefined` if not found) without
-    updating the "recently used"-ness of the key.
+  Returns the value without updating the "recently used"-ness of the key and without triggering the `revalidate` 
+  function even if the item is stale.
 
-    (If you find yourself using this a lot, you *might* be using the
-    wrong sort of data structure, but there are some use cases where
-    it's handy.)
+  (If you find yourself using this a lot, you *might* be using the wrong sort of data structure, but there are some use
+  cases where it's handy.)
 
 * `del(key)`
 
-    Deletes a key out of the cache.
+  Deletes a key out of the cache.
 
 * `reset()`
 
-    Clear the cache entirely, throwing away all values.
+  Clear the cache entirely, throwing away all values.
 
 * `has(key)`
 
-    Check if a key is in the cache, without updating the recent-ness
-    or deleting it for being stale.
+  Check if a key is in the cache, without updating the recent-ness or deleting it for being stale.
 
-* `forEach(function(value,key,cache), [thisp])`
+* `isStale(key)`
 
-    Just like `Array.prototype.forEach`.  Iterates over all the keys
-    in the cache, in order of recent-ness.  (Ie, more recently used
-    items are iterated over first.)
+  Check if an item has become stale (`max-age` expired). At this point any call to `get` will still return the cached value
+  but kick off revalidation in the background.
 
-* `rforEach(function(value,key,cache), [thisp])`
+* `isPastStale(key)`
 
-    The same as `cache.forEach(...)` but items are iterated over in
-    reverse order.  (ie, less recently used items are iterated over
-    first.)
+  Check if an item has fully expired (`max-age` expired and `stale-while-revalidate` window has passed). At this point the item
+  is deleted from cache.
+
+* `wrap(key, revalidate, callback)`
+
+  Helper that simplifies the most common use cases. This method first checks if an item identified by `key` is cached. If
+  it is `callback` is called with that value, otherwise `revalidate` is used to get the data (e.g. by fetching from
+  remote or reading from database). On success the item is cached and automatically revalidated when it becomes stale.
+
+  `revalidate` method has the following signature: `function (callback)`. Its callback parameter should be called using: 
+  `callback(error, value, [options])`.
+
+  `callback` method has the following signature: `function (error, value)`
+
+* `forEach(function(value, key, cache), [thisp])`
+
+  Just like `Array.prototype.forEach`. Iterates over all the keys in the cache, in order of recent-ness. (Ie, more
+  recently used items are iterated over first.)
+
+* `rforEach(function(value, key, cache), [thisp])`
+
+  The same as `cache.forEach(...)` but items are iterated over in reverse order. (ie, less recently used items are
+  iterated over first.)
 
 * `keys()`
 
-    Return an array of the keys in the cache.
+  Return an array of the keys in the cache.
 
 * `values()`
 
-    Return an array of the values in the cache.
+  Return an array of the values in the cache.
 
 * `length()`
 
-    Return total length of objects in cache taking into account
-    `length` options function.
+  Return total length of objects in cache taking into account `length` options function.
 
 * `itemCount`
 
-    Return total quantity of objects currently in cache. Note, that
-    `stale` (see options) items are returned as part of this item
-    count.
-
-* `dump()`
-
-    Return an array of the cache entries ready for serialization and usage
-    with 'destinationCache.load(arr)`.
-
-* `load(cacheEntriesArray)`
-
-    Loads another cache entries array, obtained with `sourceCache.dump()`,
-    into the cache. The destination cache is reset before loading new entries
+  Return total quantity of objects currently in cache. 
