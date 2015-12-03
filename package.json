@@ -24,7 +24,7 @@
     "url": "https://github.com/cyberthom/stale-lru-cache"
   },
   "devDependencies": {
-    "tap": "^1.2.0",
+    "tap": "^2.3.1",
     "weak": ""
   },
   "license": "ISC",
