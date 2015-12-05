@@ -293,6 +293,61 @@ test("individual item can have its own staleWhileRevalidate", function(t) {
   }, 61)
 })
 
+test("cache forever by default", function(t) {
+  var cache = new LRU()
+
+  t.ok(cache.set("a", "A"))
+  setTimeout(function () {
+    t.equal(cache.get("a"), "A")
+    t.end()
+  }, 500)
+})
+
+test("do not cache maxAge set to 0", function(t) {
+  var cache = new LRU({
+    maxAge: 0
+  })
+  t.notOk(cache.set("a", "A"))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("do not cache cacheControl set to no-cache", function(t) {
+  var cache = new LRU({
+    cacheControl: 'no-cache'
+  })
+  t.notOk(cache.set("a", "A"))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("do not cache individual items with cacheControl set to no-cache", function(t) {
+  var cache = new LRU()
+  t.notOk(cache.set("a", "A", {
+    cacheControl: 'no-cache'
+  }))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("cache cacheContorl set to max-age=1, stale-while-revalidate=1000", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+
+  t.ok(cache.set("a", "A"))
+  t.equal(cache.get("a"), "A")
+  setTimeout(function () {
+    t.ok(cache.isStale("a"))
+    t.notOk(cache.isPastStale("a"))
+    t.equal(cache.get("a"), "A")
+    t.end()
+  }, 1100)
+})
+
 test("isStale", function(t) {
   var cache = new LRU({
     max: 5,

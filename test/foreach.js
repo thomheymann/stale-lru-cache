@@ -83,22 +83,24 @@ test('all entries are iterated over', function(t) {
 })
 
 test('all stale entries are removed', function(t) {
-  var l = new LRU({ max: 5, maxAge: -5 / 1000 })
+  var l = new LRU({ max: 5, maxAge: 10 / 1000 })
   for (var i = 0; i < 10; i ++) {
     l.set(i.toString(), i.toString(2))
   }
-
+  
   t.equal(l.keys().length, 5)
 
-  var i = 0
-  l.forEach(function () {
-    i += 1
-  })
+  setTimeout(function () {
+    var i = 0
+    l.forEach(function () {
+      i += 1
+    })
 
-  t.equal(i, 0)
-  t.equal(l.keys().length, 0)
+    t.equal(i, 0)
+    t.equal(l.keys().length, 0)
 
-  t.end()
+    t.end()
+  }, 11);
 })
 
 test('expires', function (t) {

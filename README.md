@@ -56,9 +56,16 @@ cache.wrap('key', function (callback) {
 
   Use `max-age=<seconds>` to define when the item will expire.
 
-  Combine with `stale-while-revalidate=<seconds>` to set the time window after `max-age` has expired in which the item is marked as
-  stale but still usable. After both `max-age` and `stale-while-revalidate` have expired the item will be deleted from
-  cache.
+  Combine with `stale-while-revalidate=<seconds>` to set the time window after `max-age` has expired in which the item is
+  marked as stale but still usable. After both `max-age` and `stale-while-revalidate` have expired the item will be
+  deleted from cache.
+
+  Examples:
+
+  * `no-cache, no-store, must-revalidate` - Will be dropped out of cache immediately
+  * `max-age=600, must-revalidate` - Will be cached for 10 minutes and then dropped out of cache
+  * `max-age=600, stale-while-revalidate=86400` - Will be cached for 10 minutes and then revalidated in the background if
+    the item is accessed again within a time window of 1 day
 
 * `revalidate` - Function used to fetch stale items
 
