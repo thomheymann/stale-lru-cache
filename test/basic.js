@@ -592,6 +592,26 @@ test("wrap", function(t) {
   }, 11)
 })
 
+test("callback queue fulfilled after dropping item", function(t) {
+  var cache = new LRU(100)
+  var count = 0;
+  function work(callback) {
+    count++;
+    callback(null, "A", { maxAge: 0 });
+  }
+
+  cache.wrap("a", work, function (error, value) {
+    t.equal(value, "A")
+    t.equal(count, 1)
+
+    cache.wrap("a", work, function (error, value) {
+      t.equal(value, "A")
+      t.equal(count, 2)
+      t.end()
+    });
+  });
+})
+
 test("disposal function", function(t) {
   var disposed = false
   var cache = new LRU({
