@@ -16,7 +16,7 @@
     "cache-control"
   ],
   "scripts": {
-    "test": "tap test --gc"
+    "test": "tap test --gc --coverage"
   },
   "main": "lib/lru-cache.js",
   "repository": {
