@@ -1,7 +1,9 @@
 # Stale LRU Cache
 
-[![Build Status via Travis CI](https://travis-ci.org/cyberthom/stale-lru-cache.svg?branch=master)](https://travis-ci.org/cyberthom/stale-lru-cache)
-[![Coverage Status](https://coveralls.io/repos/cyberthom/stale-lru-cache/badge.svg?branch=master&service=github)](https://coveralls.io/github/cyberthom/stale-lru-cache?branch=master)
+[![Version](https://img.shields.io/npm/v/stale-lru-cache.svg)](https://www.npmjs.com/package/stale-lru-cache)
+[![License](https://img.shields.io/npm/l/stale-lru-cache.svg)](https://www.npmjs.com/package/stale-lru-cache)
+[![Build Status](https://travis-ci.org/cyberthom/stale-lru-cache.svg?branch=master)](https://travis-ci.org/cyberthom/stale-lru-cache)
+[![Test Coverage](https://coveralls.io/repos/cyberthom/stale-lru-cache/badge.svg?branch=master&service=github)](https://coveralls.io/github/cyberthom/stale-lru-cache?branch=master)
 
 A fork of [lru-cache](https://www.npmjs.com/package/lru-cache) that adds support for `stale-while-revalidate` cache control.
 
