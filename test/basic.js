@@ -277,20 +277,20 @@ test("individual item can have its own staleWhileRevalidate", function(t) {
     t.notOk(cache.get("a"))
     t.equal(cache.get("b"), "B")
     t.equal(cache.get("c"), "C")
-  }, 21)
+  }, 25)
 
   setTimeout(function () {
     t.notOk(cache.get("a"))
     t.notOk(cache.get("b"))
     t.equal(cache.get("c"), "C")
-  }, 41)
+  }, 45)
 
   setTimeout(function () {
     t.notOk(cache.get("a"))
     t.notOk(cache.get("b"))
     t.notOk(cache.get("c"))
     t.end()
-  }, 61)
+  }, 65)
 })
 
 test("cache forever by default", function(t) {
@@ -303,7 +303,7 @@ test("cache forever by default", function(t) {
   }, 500)
 })
 
-test("do not cache maxAge set to 0", function(t) {
+test("do not cache with maxAge set to 0", function(t) {
   var cache = new LRU({
     maxAge: 0
   })
@@ -313,7 +313,7 @@ test("do not cache maxAge set to 0", function(t) {
   t.end()
 })
 
-test("do not cache cacheControl set to no-cache", function(t) {
+test("do not cache with cacheControl set to no-cache", function(t) {
   var cache = new LRU({
     cacheControl: 'no-cache'
   })
@@ -324,7 +324,9 @@ test("do not cache cacheControl set to no-cache", function(t) {
 })
 
 test("do not cache individual items with cacheControl set to no-cache", function(t) {
-  var cache = new LRU()
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
   t.notOk(cache.set("a", "A", {
     cacheControl: 'no-cache'
   }))
@@ -333,7 +335,29 @@ test("do not cache individual items with cacheControl set to no-cache", function
   t.end()
 })
 
-test("cache cacheContorl set to max-age=1, stale-while-revalidate=1000", function(t) {
+test("do not cache with cacheControl set to no-store", function(t) {
+  var cache = new LRU({
+    cacheControl: 'no-store'
+  })
+  t.notOk(cache.set("a", "A"))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("do not cache individual items with cacheControl set to no-store", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+  t.notOk(cache.set("a", "A", {
+    cacheControl: 'no-store'
+  }))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("cache with cacheControl set to max-age=1, stale-while-revalidate=1000", function(t) {
   var cache = new LRU({
     cacheControl: 'max-age=1, stale-while-revalidate=1000'
   })
@@ -345,14 +369,86 @@ test("cache cacheContorl set to max-age=1, stale-while-revalidate=1000", functio
     t.notOk(cache.isPastStale("a"))
     t.equal(cache.get("a"), "A")
     t.end()
-  }, 1100)
+  }, 1005)
+})
+
+test("cache individual items with cacheControl set to public (without specifying max-age) using instance default", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+
+  t.ok(cache.set("a", "A", {
+    cacheControl: 'public'
+  }))
+  setTimeout(function () {
+    t.ok(cache.isStale("a"))
+    t.notOk(cache.isPastStale("a"))
+    t.equal(cache.get("a"), "A")
+    t.end()
+  }, 1005)
+})
+
+test("cache individual items with cacheControl set to private (without specifying max-age) using instance default", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+
+  t.ok(cache.set("a", "A", {
+    cacheControl: 'private'
+  }))
+  setTimeout(function () {
+    t.ok(cache.isStale("a"))
+    t.notOk(cache.isPastStale("a"))
+    t.equal(cache.get("a"), "A")
+    t.end()
+  }, 1005)
+})
+
+test("cache individual items with invalid cacheControl using instance default", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+
+  t.ok(cache.set("a", "A", {
+    cacheControl: 'max-age'
+  }))
+  t.ok(cache.set("b", "B", {
+    cacheControl: 'max-age='
+  }))
+  t.ok(cache.set("c", "C", {
+    cacheControl: '   '
+  }))
+  t.ok(cache.set("d", "D", {
+    cacheControl: ''
+  }))
+  t.ok(cache.set("e", "E", {
+    cacheControl: 'asd'
+  }))
+  setTimeout(function () {
+    t.ok(cache.isStale("a"))
+    t.notOk(cache.isPastStale("a"))
+    t.equal(cache.get("a"), "A")
+    t.ok(cache.isStale("b"))
+    t.notOk(cache.isPastStale("b"))
+    t.equal(cache.get("b"), "B")
+    t.ok(cache.isStale("c"))
+    t.notOk(cache.isPastStale("c"))
+    t.equal(cache.get("c"), "C")
+    t.ok(cache.isStale("d"))
+    t.notOk(cache.isPastStale("d"))
+    t.equal(cache.get("d"), "D")
+    t.ok(cache.isStale("e"))
+    t.notOk(cache.isPastStale("e"))
+    t.equal(cache.get("e"), "E")
+    t.end()
+  }, 1005)
 })
 
 test("isStale", function(t) {
   var cache = new LRU({
     max: 5,
     maxAge: 30 / 1000,
-    staleWhileRevalidate: 1000 / 1000
+    staleWhileRevalidate: 100 / 1000
   })
 
   cache.set("a", "A", { maxAge: 10 / 1000 }) // stale in 10
@@ -367,20 +463,20 @@ test("isStale", function(t) {
     t.ok(cache.isStale("a"))
     t.notOk(cache.isStale("b"))
     t.notOk(cache.isStale("c"))
-  }, 11)
+  }, 15)
 
   setTimeout(function () {
     t.ok(cache.isStale("a"))
     t.ok(cache.isStale("b"))
     t.notOk(cache.isStale("c"))
-  }, 31)
+  }, 35)
 
   setTimeout(function () {
     t.ok(cache.isStale("a"))
     t.ok(cache.isStale("b"))
     t.ok(cache.isStale("c"))
     t.end()
-  }, 51)
+  }, 55)
 })
 
 test("isPastStale", function(t) {
@@ -402,27 +498,27 @@ test("isPastStale", function(t) {
     t.ok(cache.isPastStale("a"))
     t.notOk(cache.isPastStale("b"))
     t.notOk(cache.isPastStale("c"))
-  }, 21)
+  }, 25)
 
   setTimeout(function () {
     t.ok(cache.isPastStale("a"))
     t.ok(cache.isPastStale("b"))
     t.notOk(cache.isPastStale("c"))
-  }, 41)
+  }, 45)
 
   setTimeout(function () {
     t.ok(cache.isPastStale("a"))
     t.ok(cache.isPastStale("b"))
     t.ok(cache.isPastStale("c"))
     t.end()
-  }, 61)
+  }, 65)
 })
 
 test("revalidate", function(t) {
   var count = 0;
   var cache = new LRU({
     maxAge: 10 / 1000,
-    staleWhileRevalidate: 1000 / 1000,
+    staleWhileRevalidate: 100 / 1000,
     revalidate: function (key, callback) {
       var value = "A"+(++count);
       setTimeout(function () {
@@ -436,29 +532,28 @@ test("revalidate", function(t) {
   t.notOk(cache.isStale("a"))
   t.notOk(cache.isPastStale("a"))
   t.equal(cache.get("a"), "A") // cached value is set correctly
-  t.equal(count, 0)
 
   setTimeout(function () {
+    t.equal(count, 0)
     t.ok(cache.isStale("a"))
     t.notOk(cache.isPastStale("a"))
     t.equal(cache.get("a"), "A") // has become stale, will kick off revalidation
-    t.equal(count, 1)
 
     setTimeout(function () {
+      t.equal(count, 1)
       t.ok(cache.isStale("a"))
       t.notOk(cache.isPastStale("a"))
       t.equal(cache.get("a"), "A") // 1st revalidation is still pending, will not trigger another one
-      t.equal(count, 1)
-    }, 1)
+    }, 5)
 
     setTimeout(function () {
+      t.equal(count, 1)
       t.notOk(cache.isStale("a"))
       t.notOk(cache.isPastStale("a"))
       t.equal(cache.get("a"), "A1") // revalidated value is set correctly
-      t.equal(count, 1)
       t.end()
-    }, 21)
-  }, 11)
+    }, 25)
+  }, 15)
 })
 
 test("revalidate with errors", function(t) {
@@ -477,29 +572,28 @@ test("revalidate with errors", function(t) {
   t.notOk(cache.isStale("a"))
   t.notOk(cache.isPastStale("a"))
   t.equal(cache.get("a"), "A") // cached value is set correctly
-  t.equal(count, 0)
 
   setTimeout(function () {
+    t.equal(count, 0)
     t.ok(cache.isStale("a"))
     t.notOk(cache.isPastStale("a"))
     t.equal(cache.get("a"), "A") // has become stale, will kick off revalidation
-    t.equal(count, 1)
 
     setTimeout(function () {
+      t.equal(count, 1)
       t.ok(cache.isStale("a"))
       t.notOk(cache.isPastStale("a"))
       t.equal(cache.get("a"), "A") // revalidation failed, value is unchanged
-      t.equal(count, 2)
     }, 5)
 
     setTimeout(function () {
+      t.equal(count, 2)
       t.notOk(cache.isStale("a"))
       t.ok(cache.isPastStale("a"))
       t.notOk(cache.get("a")) // revalidation failed and maxAge has expired, item is deleted, no revalidation is kicked off
-      t.equal(count, 2)
       t.end()
-    }, 31)
-  }, 11)
+    }, 35)
+  }, 15)
 })
 
 test("revalidate with updated cache-control options", function(t) {
@@ -507,7 +601,7 @@ test("revalidate with updated cache-control options", function(t) {
     maxAge: 10 / 1000,
     staleWhileRevalidate: 20 / 1000,
     revalidate: function (key, callback) {
-      if (key === "b") return callback(null, "B", { maxAge: 1000 / 1000 });
+      if (key === "b") return callback(null, "B", { maxAge: 100 / 1000 });
       callback(null, "A");
     }
   })
@@ -538,8 +632,8 @@ test("revalidate with updated cache-control options", function(t) {
       t.notOk(cache.get("a"))
       t.equal(cache.get("b"), "B")
       t.end()
-    }, 51)
-  }, 11)
+    }, 55)
+  }, 15)
 })
 
 test("wrap", function(t) {
@@ -566,7 +660,7 @@ test("wrap", function(t) {
       t.equal(value, "A") // cached value is returned correctly
       t.equal(count, 1) // not stale, has not kicked off revalidation
     });
-  }, 1)
+  }, 5)
 
   setTimeout(function () {
     t.ok(cache.isStale("a")) // has become stale, wrap will kick off revalidation
@@ -588,8 +682,8 @@ test("wrap", function(t) {
         t.equal(count, 3)
         t.end()
       });
-    }, 51)
-  }, 11)
+    }, 55)
+  }, 15)
 })
 
 test("callback queue fulfilled after dropping item", function(t) {
@@ -628,6 +722,21 @@ test("disposal function", function(t) {
   t.equal(disposed, 2)
   cache.reset()
   t.equal(disposed, 3)
+  t.end()
+})
+
+test("disposal function when overwriting value", function(t) {
+  var disposed = false
+  var cache = new LRU({
+    max: 1,
+    dispose: function (k, n) {
+      disposed = n
+    }
+  })
+
+  cache.set(1, 1)
+  cache.set(1, 2)
+  t.equal(disposed, 1)
   t.end()
 })
 
