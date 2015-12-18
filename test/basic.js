@@ -357,6 +357,28 @@ test("do not cache individual items with cacheControl set to no-store", function
   t.end()
 })
 
+test("do not cache with cacheControl set to private", function(t) {
+  var cache = new LRU({
+    cacheControl: 'private'
+  })
+  t.notOk(cache.set("a", "A"))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
+test("do not cache individual items with cacheControl set to private", function(t) {
+  var cache = new LRU({
+    cacheControl: 'max-age=1, stale-while-revalidate=1000'
+  })
+  t.notOk(cache.set("a", "A", {
+    cacheControl: 'private'
+  }))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
+})
+
 test("cache with cacheControl set to max-age=1, stale-while-revalidate=1000", function(t) {
   var cache = new LRU({
     cacheControl: 'max-age=1, stale-while-revalidate=1000'
@@ -379,22 +401,6 @@ test("cache individual items with cacheControl set to public (without specifying
 
   t.ok(cache.set("a", "A", {
     cacheControl: 'public'
-  }))
-  setTimeout(function () {
-    t.ok(cache.isStale("a"))
-    t.notOk(cache.isPastStale("a"))
-    t.equal(cache.get("a"), "A")
-    t.end()
-  }, 1005)
-})
-
-test("cache individual items with cacheControl set to private (without specifying max-age) using instance default", function(t) {
-  var cache = new LRU({
-    cacheControl: 'max-age=1, stale-while-revalidate=1000'
-  })
-
-  t.ok(cache.set("a", "A", {
-    cacheControl: 'private'
   }))
   setTimeout(function () {
     t.ok(cache.isStale("a"))
