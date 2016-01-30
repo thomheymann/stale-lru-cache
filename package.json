@@ -1,35 +1,35 @@
 {
   "name": "stale-lru-cache",
-  "description": "Fork of lru-cache that adds support for stale-while-revalidate cache control",
+  "description": "In-memory cache for node.js with support for max-age and stale-while-revalidate Cache-Control headers",
   "version": "4.2.1",
   "author": {
     "name": "Thomas Heymann",
     "email": "thom@totheskies.net"
   },
   "keywords": [
-    "mru",
     "lru",
     "cache",
     "stale-while-revalidate",
-    "stale",
-    "revalidate",
+    "max-age",
     "cache-control"
   ],
   "scripts": {
     "test": "tap test --gc --coverage"
   },
-  "main": "lib/lru-cache.js",
+  "main": "lib/stale-lru-cache.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/cyberthom/stale-lru-cache"
   },
-  "devDependencies": {
-    "tap": "^2.3.1",
-    "weak": ""
-  },
   "license": "ISC",
   "dependencies": {
-    "parse-cache-control": "^1.0.1",
-    "pseudomap": "^1.0.1"
+    "yallist": "^2.0.0"
+  },
+  "devDependencies": {
+    "tap": "^5.2.0",
+    "weak": "^1.0.1"
+  },
+  "engines": {
+    "node" : ">=0.12.6"
   }
 }

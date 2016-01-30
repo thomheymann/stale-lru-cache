@@ -1,0 +1,14 @@
+{
+  "name": "node-cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "author": "",
+  "dependencies": {
+    "node-cache": "^3.1.0",
+    "uuid": "^2.0.1"
+  }
+}
