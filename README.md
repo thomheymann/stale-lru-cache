@@ -5,161 +5,154 @@
 [![Build Status](https://travis-ci.org/cyberthom/stale-lru-cache.svg?branch=master)](https://travis-ci.org/cyberthom/stale-lru-cache)
 [![Test Coverage](https://coveralls.io/repos/cyberthom/stale-lru-cache/badge.svg?branch=master&service=github)](https://coveralls.io/github/cyberthom/stale-lru-cache?branch=master)
 
-A fork of [lru-cache](https://www.npmjs.com/package/lru-cache) that adds support for `stale-while-revalidate` cache control.
-
-Comes with full support for non-string keys and values.
+In-memory cache for node.js with support for `max-age=<seconds>` and `stale-while-revalidate=<seconds>` Cache-Control headers.
 
 
-## Usage
-
-#### Overview
+## Overview
 
 ```javascript
 var LRU = require('stale-lru-cache');
 
 var cache = LRU({
-    max: 100,
-    cacheControl: 'max-age=600, stale-while-revalidate=86400',
+    maxSize: 100,
+    maxAge: 600,
+    staleWhileRevalidate: 86400,
     revalidate: function (key, callback) {
-        // ... after some async data fetching
-        callback(null, 'new value');
+        fetchSomeAsyncData(callback);
     }
 });
 
-cache.set('key', { some: 'value' });
-cache.get('key');
-
-cache.set('another-key', 'another value', 'max-age=600, must-revalidate');
+cache.set('key', 'value', { maxAge: 60 }); // true
+cache.get('key'); // 'value'
 ```
 
-#### Helper
 
-There is also a `wrap(key, revalidate, callback)` helper (inspired by [cache-manager](https://www.npmjs.com/package/cache-manager)) to simplify the most common use-cases:
+## Documentation
+
+* [LRU (options)](#lru-options)
+* [set (key, value, [options])](#set-key-value-options)
+* [get (key)](#get-key)
+* [has (key)](#has-key)
+* [isStale (key)](#isstale-key)
+* [wrap (key, revalidate, callback)](#wrap-key-revalidate-callback)
+* [size](#size)
+
+### LRU (options)
+
+Instantiates a new LRU cache instance.
+
+##### Parameters
+
+* `options.maxAge` - Time from now (in seconds) after which items will expire (default: Infinity)
+* `options.staleWhileRevalidate` - Time window (in seconds) after `maxAge` has expired in which items are marked as stale but still usable. After both
+  `maxAge` and `staleWhileRevalidate` have expired items will be deleted from cache (default: 0)
+* `options.revalidate (key, callback)` - Function that fetches stale items. `callback` takes the following parameters: `function (error, value, [options])`
+* `options.maxSize` - Maximum cache size. Checked by applying the `getSize` options function to all values in the cache (default: Infinity)
+* `options.getSize (value, key)` - Function used to calculate the length of stored items (default: `function () { return 1 }`)
+
+---
+
+### set (key, value, [options])
+
+Sets the value for a key and marks it as most recently used. `options` can either be an object or a Cache-Control header string.
+
+##### Parameters
+
+* `key` - Cache key (can be a non-string)
+* `value` - Cache value (can be a non-string)
+* `options.maxAge` - Time from now (in seconds) after which items will expire
+* `options.staleWhileRevalidate` - Time window (in seconds) after `maxAge` has expired in which items are marked as stale but still usable. After both
+  `maxAge` and `staleWhileRevalidate` have expired items will be deleted from cache
+* `options.revalidate (key, callback)` - Function used to fetch stale items
+
+##### Examples
 
 ```javascript
-var LRU = require('stale-lru-cache');
-var cache = LRU(100);
+cache.set('key', 'value'); // true
+cache.set('key', 'value', { maxAge: 600, staleWhileRevalidate: 86400 }); // true
+cache.set('key', 'value', { maxAge: 0 }); // false
+cache.set('key', 'value', 'max-age=600, stale-while-revalidate=86400'); // true
+```
 
-cache.wrap('key', function (callback) {
-    // ... after some async data fetching
-    callback(null, 'new value', 'max-age=600, stale-while-revalidate=86400');
+---
+
+### get (key)
+
+Returns the cached value for a key and marks it as most recently used.
+
+---
+
+### has (key)
+
+Checks if a key is in the cache, without marking it as recently used.
+
+---
+
+### isStale (key)
+
+Checks if a key is in the cache and has been marked as stale, without marking it as recently used.
+
+---
+
+### wrap (key, revalidate, callback)
+
+Helper that simplifies the most common use cases. 
+
+If a key is in the cache `callback` will receive its value immediately. Otherwise `revalidate` is used to fetch it. On
+success the item is cached and automatically revalidated when it becomes stale.
+
+##### Parameters
+
+* `key` - Cache key (can be a non-string)
+* `revalidate (key, callback)` - Function that fetches stale items. `callback` takes the following parameters: `function (error, value, [options])`
+* `callback (error, value)` - Function that recieves the cached value for a key
+
+##### Examples
+
+```javascript
+cache.wrap('key', function (key, callback) {
+    callback(null, 'new value', { maxAge: 600, staleWhileRevalidate: 86400 });
 }, function (error, value) {
     // Do something with value
 });
 ```
 
+Using Cache-Control header from HTTP request:
 
-## Options
+```javascript
+cache.wrap('key', function (key, callback) {
+    request('http://www.google.com', function (error, response, html) {
+        if (error) return callback(error);
+        callback(null, html, response.headers['cache-control']);
+    })
+}, function (error, value) {
+    // Do something with value
+});
+```
 
-* `max` - Maximum cache size (default: Infinity)
+Behaviour of Cache-Control headers:
 
-  Checked by applying the `length` function to all values in the cache. 
+* `max-age=600, must-revalidate` - Will be cached for 10 minutes and then dropped out of cache
+* `max-age=600, stale-while-revalidate=86400` - Will be cached for 10 minutes and then revalidated in the background if
+  the item is accessed again within a time window of 1 day
+* `no-cache, no-store, must-revalidate` - Will be dropped out of cache immediately
+* `private` - Will be dropped out of cache immediately
+* `public` - Will be cached using default `maxAge` and `staleWhileRevalidate` options values
 
-* `cacheControl` - Cache control string
+---
 
-  Use `max-age=<seconds>` to define when the item will expire.
+### size
 
-  Combine with `stale-while-revalidate=<seconds>` to set the time window after `max-age` has expired in which the item is
-  marked as stale but still usable. After both `max-age` and `stale-while-revalidate` have expired the item will be
-  deleted from cache.
-
-  Examples:
-
-  * `no-cache, no-store, must-revalidate` - Will be dropped out of cache immediately
-  * `max-age=600, must-revalidate` - Will be cached for 10 minutes and then dropped out of cache
-  * `max-age=600, stale-while-revalidate=86400` - Will be cached for 10 minutes and then revalidated in the background if
-    the item is accessed again within a time window of 1 day
-
-* `revalidate` - Function used to fetch stale items
-
-  Method has the following signature `function (key, callback)`. Its callback parameter should be called using: 
-  `callback(error, value
-  , [options])`.
-
-* `length` - Function used to calculate the length of stored items
-
-  If you're storing strings or buffers, then you probably want to do something like `function (n, key) { return n.length }`.
-  The default is `function () { return 1 }`, which is fine if you want to store `max` like-sized things. The item is passed
-  as the first argument, and the key is passed as the second argumnet.
-
-* `dispose` - Function called on items when they are dropped from the cache
-
-  This can be handy if you want to close file descriptors or do other cleanup tasks when items are no longer accessible.
-  Called with `key, value`. It's called *before* actually removing the item from the internal cache, so if you want to
-  immediately put it back in, you'll have to do that in a `nextTick` or `setTimeout` callback or it won't do anything.
+Size of all values in the cache taking into account `getSize` options function.
 
 
-## API
+## Performance
 
-* `set(key, value, [options])`
-* `get(key) => value`
+Inserting 1,000,000 records on `node v4.2.1`:
 
-  Both of these will update the "recently used"-ness of the key. They do what you think. `options` is optional and
-  overrides the cache's default `cacheControl` and `revalidate` settings on a per-item basis. 
-
-* `peek(key)`
-
-  Returns the value without updating the "recently used"-ness of the key and without triggering the `revalidate` 
-  function even if the item is stale.
-
-  (If you find yourself using this a lot, you *might* be using the wrong sort of data structure, but there are some use
-  cases where it's handy.)
-
-* `del(key)`
-
-  Deletes a key out of the cache.
-
-* `reset()`
-
-  Clear the cache entirely, throwing away all values.
-
-* `has(key)`
-
-  Check if a key is in the cache, without updating the recent-ness or deleting it for being stale.
-
-* `isStale(key)`
-
-  Check if an item has become stale (`max-age` expired). At this point any call to `get` will still return the cached value
-  but kick off revalidation in the background.
-
-* `isPastStale(key)`
-
-  Check if an item has fully expired (`max-age` expired and `stale-while-revalidate` window has passed). At this point the item
-  is deleted from cache.
-
-* `wrap(key, revalidate, callback)`
-
-  Helper that simplifies the most common use cases. This method first checks if an item identified by `key` is cached. If
-  it is `callback` is called with that value, otherwise `revalidate` is used to get the data (e.g. by fetching from
-  remote or reading from database). On success the item is cached and automatically revalidated when it becomes stale.
-
-  `revalidate` method has the following signature: `function (callback)`. Its callback parameter should be called using: 
-  `callback(error, value, [options])`.
-
-  `callback` method has the following signature: `function (error, value)`
-
-* `forEach(function(value, key, cache), [thisp])`
-
-  Just like `Array.prototype.forEach`. Iterates over all the keys in the cache, in order of recent-ness. (Ie, more
-  recently used items are iterated over first.)
-
-* `rforEach(function(value, key, cache), [thisp])`
-
-  The same as `cache.forEach(...)` but items are iterated over in reverse order. (ie, less recently used items are
-  iterated over first.)
-
-* `keys()`
-
-  Return an array of the keys in the cache.
-
-* `values()`
-
-  Return an array of the values in the cache.
-
-* `length()`
-
-  Return total length of objects in cache taking into account `length` options function.
-
-* `itemCount`
-
-  Return total quantity of objects currently in cache. 
+| library                 | insert time | memory used |
+| :---------------------- | :---------: | :---------: |
+| `stale-lru-cache@5.0.0` | 10.213 ms   | 1.43 GB     |
+| `fast-lru@3.0.1`        | 10.891 ms   | 1.36 GB     |
+| `lru-cache@4.0.0`       | 11.128 ms   | 1.40 GB     |
+| `node-cache@3.1.0`      | 17.575 ms   | 0.98 GB     |

@@ -1,0 +1,14 @@
+{
+  "name": "fast-cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "node main.js"
+  },
+  "author": "",
+  "dependencies": {
+    "fast-lru": "^3.0.1",
+    "uuid": "^2.0.1"
+  }
+}
