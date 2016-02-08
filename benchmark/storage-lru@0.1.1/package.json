@@ -1,5 +1,5 @@
 {
-  "name": "lru-cache",
+  "name": "storage-lru",
   "version": "1.0.0",
   "description": "",
   "main": "insert-time.js",
@@ -8,7 +8,9 @@
   },
   "author": "",
   "dependencies": {
-    "lru-cache": "^4.0.0",
+    "localstorage-memory": "^1.0.2",
+    "node-localstorage": "^1.1.2",
+    "storage-lru": "^0.1.1",
     "uuid": "^2.0.1"
   }
 }

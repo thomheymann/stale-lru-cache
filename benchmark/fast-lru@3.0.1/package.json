@@ -2,9 +2,9 @@
   "name": "fast-cache",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "insert-time.js",
   "scripts": {
-    "test": "node main.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "stale-lru-cache",
-  "description": "In-memory cache for node.js with support for max-age and stale-while-revalidate Cache-Control headers",
+  "description": "Resilient and performant in-memory cache for node.js",
   "version": "5.0.0",
   "author": {
     "name": "Thomas Heymann",
