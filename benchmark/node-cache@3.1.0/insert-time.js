@@ -14,7 +14,7 @@ for (var i = 1; i <= 1e6; i++) {
     }
 
     if (i % 1e4 === 0) {
-        console.log('%d %d  %d  %d', i, ms(time(prev)) / 1e4, ms(time(start)), process.memoryUsage().heapUsed - memory);
+        console.log('%d	%d	%d	%d', i, ms(time(prev)) / 1e4, ms(time(start)), process.memoryUsage().heapUsed - memory);
         prev = time();
     }
 }
