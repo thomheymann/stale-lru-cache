@@ -56,16 +56,16 @@ cache.wrap('google', function (key, callback) {
 
 ## Reference
 
-* [`Cache()`](#lru-options)
-* [`.delete()`](#delete-key)
-* [`.get()`](#get-key)
-* [`.has()`](#has-key)
-* [`.isStale()`](#isstale-key)
+* [`Cache()`](#cacheoptions)
+* [`.delete()`](#deletekey)
+* [`.get()`](#getkey)
+* [`.has()`](#haskey)
+* [`.isStale()`](#isstalekey)
 * [`.keys()`](#keys)
-* [`.set()`](#set-key-value-options)
+* [`.set()`](#setkeyvalueoptions)
 * [`.size`](#size)
 * [`.values()`](#values)
-* [`.wrap()`](#wrap-key-revalidate-callback)
+* [`.wrap()`](#wrapkeyrevalidatecallback)
 
 
 ### `Cache(options)`
@@ -173,7 +173,7 @@ to fetch the initial value. If successful the item is cached and automatically r
 ##### Parameters
 
 * `key` - **Required.** The key of the item to be wrapped. (both objects and primitives may be used)
-* `revalidate(key, callback(error, value, [options]))` - **Required.** Function that gets the initial value and refreshes the item in the background after it becomes stale.
+* `revalidate(key, callback(error, value, [options]))` - **Required.** Function that fetches the initial value and refreshes the item in the background after it becomes stale.
 * `callback(error, value)` - **Required.** Function that recieves the cached value of the wrapped item.
 
 ##### Example
@@ -221,9 +221,9 @@ Tested on `node v4.2.1`.
 [05]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/lru-cache@3.2.0--insert-time.tsv
 [06]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/storage-lru@0.1.1--insert-time.tsv
 
-[07]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/stale-lru-cache@latest--read-time.tsv
-[08]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/fast-lru@3.0.1--read-time.tsv
-[09]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/lru-cache@4.0.0--read-time.tsv
+[07]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/lru-cache@4.0.0--read-time.tsv
+[08]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/stale-lru-cache@latest--read-time.tsv
+[09]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/fast-lru@3.0.1--read-time.tsv
 [10]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/node-cache@3.1.0--read-time.tsv
-[11]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/lru-cache@3.2.0--read-time.tsv
-[12]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/storage-lru@0.1.1--read-time.tsv
+[11]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/storage-lru@0.1.1--read-time.tsv
+[12]: https://github.com/cyberthom/stale-lru-cache/blob/master/benchmark/results/lru-cache@3.2.0--read-time.tsv
