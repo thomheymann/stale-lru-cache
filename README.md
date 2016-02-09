@@ -9,7 +9,7 @@ Resilient and performant in-memory cache for node.js.
 
 ##### Features
 
-* Hides refresh latency and shields against errors using background fetching 
+* Hides refresh latency and shields against errors using background revalidation
 * Allows HTTP resources to define their own caching policy using Cache-Control headers
 * Optimises hit-ratio by discarding least recently used items first
 
@@ -52,6 +52,21 @@ cache.wrap('google', function (key, callback) {
     // Do something with cached value
 });
 ```
+
+
+## Background Revalidation 
+
+Unless you are able to cache resources forever, use `maxAge` together with `staleWhileRevalidate` to get fault-tolerant, zero-latency cache refreshes.
+
+![revalidate flow](https://dl.dropboxusercontent.com/u/61352/stale-lru-cache/stale-while-revalidate.svg)
+
+In the example above:
+
+* Request 1 is served from cache
+* Request 2 is also served from cache but has become stale so will kick of revalidation in the background
+* Request 3 continues to be served from cache
+* Once a response from origin has been received the cache is refreshed
+* Request 4 is served from cache as normal
 
 
 ## Reference
@@ -181,7 +196,7 @@ to fetch the initial value. If successful the item is cached and automatically r
 ```javascript
 cache.wrap('key', function (key, callback) {
     // After some async operation to fetch value:
-    callback(null, value, 'max-age=600, stale-while-revalidate=86400');
+    callback(null, 'value', 'max-age=600, stale-while-revalidate=86400');
 }, function (error, value) {
     // Do something with cached value
 });
@@ -198,8 +213,8 @@ Inserting 1,000,000 records:
 | `fast-lru@3.0.1`        |      7,877 ms |       0.31 GB | [Full Results][02] |
 | `lru-cache@4.0.0`       |      8,151 ms |       0.43 GB | [Full Results][03] |
 | `node-cache@3.1.0`      |     11,450 ms |       0.71 GB | [Full Results][04] |
-| `lru-cache@3.2.0`       |    100,000 ms |      *killed* | [Full Results][05] |
-| `storage-lru@0.1.1`     |    100,000 ms |      *killed* | [Full Results][06] |
+| `lru-cache@3.2.0`       |    100,000 ms |     *timeout* | [Full Results][05] |
+| `storage-lru@0.1.1`     |    100,000 ms |     *timeout* | [Full Results][06] |
 
 Reading 1,000,000 records:
 
