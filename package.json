@@ -1,7 +1,7 @@
 {
   "name": "stale-lru-cache",
   "description": "Resilient and performant in-memory cache for node.js",
-  "version": "5.0.2",
+  "version": "5.1.0",
   "author": {
     "name": "Thomas Heymann",
     "email": "thom@totheskies.net"
