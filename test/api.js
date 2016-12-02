@@ -617,3 +617,30 @@ test('delete non-existent item has no effect', function (t) {
   t.same(cache.values(), [2, 1])
   t.end()
 })
+
+test('reset', function (t) {
+  var cache = new LRU(2);
+  cache.set('a', 'A')
+  cache.set('b', 'B')
+  cache.reset()
+  t.equal(cache.get('a'), undefined)
+  t.equal(cache.get('b'), undefined)
+  t.equal(cache.size, 0)
+  t.end()
+})
+
+test("reset does not clear callback queue", function(t) {
+  var cache = new LRU(100)
+  var count = 0;
+  function work(key, callback) {
+    setTimeout(callback, 10, null, "A")
+  }
+  function done(error, value) {
+    t.equal(cache.get('a'), "A")
+    if (++count === 2) t.end() // Callback is triggered twice after 10 seconds despite reset
+  }
+  cache.wrap("a", work, done)
+  cache.wrap("a", work, done)
+  cache.reset()
+  t.equal(cache.get('a'), undefined)
+})

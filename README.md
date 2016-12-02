@@ -81,6 +81,7 @@ In the example above:
 * [`.has()`](#haskey)
 * [`.isStale()`](#isstalekey)
 * [`.keys()`](#keys)
+* [`.reset()`](#reset)
 * [`.set()`](#setkey-value-options)
 * [`.size`](#size)
 * [`.values()`](#values)
@@ -129,6 +130,14 @@ Returns `true` if an item with the specified key exists and is stale, or `false`
 ### `keys()`
 
 Returns an array with all keys stored in the cache.
+
+---
+
+### `reset()`
+
+Removes all items from the cache.
+
+Outstanding background refreshes will not be cleared to ensure that all queued `revalidate` callbacks are honoured. 
 
 ---
 
