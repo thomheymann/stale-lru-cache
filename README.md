@@ -9,9 +9,9 @@ Resilient and performant in-memory cache for node.js.
 
 ##### Features
 
-* Hides refresh latency and shields against errors using background revalidation
-* Allows HTTP resources to define their own caching policy using Cache-Control headers
-* Optimises hit-ratio by discarding least recently used items first
+* Hides refresh latency and shields against errors using background revalidation.
+* Allows HTTP resources to define their own caching policy using Cache-Control headers.
+* Optimises hit-ratio by discarding least recently used items first.
 
 
 ## Overview
@@ -27,7 +27,7 @@ npm install --save stale-lru-cache
 ```javascript
 var Cache = require('stale-lru-cache');
 
-var cache = Cache({
+var cache = new Cache({
     maxSize: 100,
     maxAge: 600,
     staleWhileRevalidate: 86400,
@@ -43,33 +43,37 @@ cache.get('key'); // 'value'
 ##### HTTP Request Caching
 
 ```javascript
-cache.wrap('google', function (key, callback) {
-    request('http://www.google.com', function (error, response, html) {
+// Get response from cache
+cache.wrap('http://www.google.com', revalidate, function (error, html) {
+    // Do something with cached response
+});
+
+// Only called to fetch the initial response and when the item becomes stale
+function revalidate(url, callback) {
+    request(url, function (error, response, html) {
         if (error) return callback(error);
         callback(null, html, response.headers['cache-control']);
-    })
-}, function (error, value) {
-    // Do something with cached value
-});
+    });
+}
 ```
 
 
 ## Background Revalidation 
 
-Unless you are able to cache resources forever, use `maxAge` together with `staleWhileRevalidate` to get fault-tolerant, zero-latency cache refreshes.
+Unless you're able to cache resources forever, use `maxAge` together with `staleWhileRevalidate` to get fault-tolerant, zero-latency cache refreshes.
 
 ![revalidate flow](https://dl.dropboxusercontent.com/u/61352/stale-lru-cache/stale-while-revalidate.svg)
 
 In the example above:
 
-* Request 1 is served from cache
-* Request 2 is also served from cache but has become stale so will kick of revalidation in the background
-* Request 3 continues to be served from cache
-* Once a response from origin has been received the cache is refreshed
-* Request 4 is served from cache as normal
+* Request 1 is served from cache.
+* Request 2 is also served from cache but has become stale so will kick of revalidation in the background.
+* Request 3 continues to be served from cache.
+* Once a response from origin has been received the cache is refreshed.
+* Request 4 is served from cache with the refreshed value.
 
 
-## Reference
+## API Reference
 
 * [`Cache()`](#cacheoptions)
 * [`.delete()`](#deletekey)
@@ -77,11 +81,10 @@ In the example above:
 * [`.has()`](#haskey)
 * [`.isStale()`](#isstalekey)
 * [`.keys()`](#keys)
-* [`.set()`](#setkeyvalueoptions)
+* [`.set()`](#setkey-value-options)
 * [`.size`](#size)
 * [`.values()`](#values)
-* [`.wrap()`](#wrapkeyrevalidatecallback)
-
+* [`.wrap()`](#wrapkey-revalidate-callback)
 
 ### `Cache(options)`
 
@@ -180,7 +183,7 @@ Returns an array with all values stored in the cache.
 
 ### `wrap(key, revalidate, callback)`
 
-Helper that simplifies the most common use cases.
+Helper used to simplify caching the response of an asynchronous operation.
 
 If an item with the specified key exists `callback` will receive its value immediately. Otherwise `revalidate` is used
 to fetch the initial value. If successful the item is cached and automatically revalidated when it becomes stale.
@@ -189,17 +192,21 @@ to fetch the initial value. If successful the item is cached and automatically r
 
 * `key` - **Required.** The key of the item to be wrapped. (both objects and primitives may be used)
 * `revalidate(key, callback(error, value, [options]))` - **Required.** Function that fetches the initial value and refreshes the item in the background after it becomes stale.
-* `callback(error, value)` - **Required.** Function that recieves the cached value of the wrapped item.
+* `callback(error, value, [options])` - **Required.** Function that recieves the cached value of the wrapped item.
 
 ##### Example
 
 ```javascript
-cache.wrap('key', function (key, callback) {
-    // After some async operation to fetch value:
-    callback(null, 'value', 'max-age=600, stale-while-revalidate=86400');
-}, function (error, value) {
+cache.wrap('key', revalidate, function (error, value) {
     // Do something with cached value
 });
+
+function revalidate(key, callback) {
+    readFromDB(function (error, value) {
+        if (error) return callback(error);
+        callback(null, value);
+    });
+}
 ```
 
 
