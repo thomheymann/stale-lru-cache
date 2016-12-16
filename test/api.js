@@ -202,7 +202,7 @@ test("individual item can have its own staleWhileRevalidate", function(t) {
   cache.set("a", "A", { staleWhileRevalidate: 0 / 1000 }) // expires in 20
   cache.set("b", "B") // expires in 40
   cache.set("c", "C", { staleWhileRevalidate: 40 / 1000 }) // expires in 60
-  
+
   t.equal(cache.get("a"), "A")
   t.equal(cache.get("b"), "B")
   t.equal(cache.get("c"), "C")
@@ -257,7 +257,7 @@ test("isStale", function(t) {
   cache.set("a", "A", { maxAge: 10 / 1000 }) // stale in 10
   cache.set("b", "B") // stale in 30
   cache.set("c", "C", { maxAge: 50 / 1000 }) // stale in 50
-  
+
   t.notOk(cache.isStale("a"))
   t.notOk(cache.isStale("b"))
   t.notOk(cache.isStale("c"))
@@ -643,4 +643,12 @@ test("reset does not clear callback queue", function(t) {
   cache.wrap("a", work, done)
   cache.reset()
   t.equal(cache.get('a'), undefined)
+})
+
+test("do not cache with a cache-control header equal to 'max-age=0'", function(t) {
+  var cache = new LRU()
+  t.notOk(cache.set("a", "A", "max-age=0"))
+  t.notOk(cache.has("a"))
+  t.notOk(cache.get("a"))
+  t.end()
 })

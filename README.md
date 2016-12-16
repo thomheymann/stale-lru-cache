@@ -58,7 +58,7 @@ function revalidate(url, callback) {
 ```
 
 
-## Background Revalidation 
+## Background Revalidation
 
 Unless you're able to cache resources forever, use `maxAge` together with `staleWhileRevalidate` to get fault-tolerant, zero-latency cache refreshes.
 
@@ -103,7 +103,7 @@ Creates and returns a new Cache instance.
 
 ### `delete(key)`
 
-Removes the specified item from the cache. 
+Removes the specified item from the cache.
 
 Returns `true` if an item existed and has been removed, or `false` if the item does not exist.
 
@@ -137,15 +137,15 @@ Returns an array with all keys stored in the cache.
 
 Removes all items from the cache.
 
-Outstanding background refreshes will not be cleared to ensure that all queued `revalidate` callbacks are honoured. 
+Outstanding background refreshes will not be cleared to ensure that all queued `revalidate` callbacks are honoured.
 
 ---
 
 ### `set(key, value, [options])`
 
-Inserts a new item with the specified `key` and `value`. 
+Inserts a new item with the specified `key` and `value`.
 
-Returns `true` if the item has been inserted, or `false` otherwise. 
+Returns `true` if the item has been inserted, or `false` otherwise.
 
 ##### Parameters
 
@@ -172,6 +172,7 @@ cache.set('key', 'value', 'no-cache, no-store, must-revalidate'); // false
 
 * `max-age=600, must-revalidate` - Will be cached for 10 minutes and removed afterwards
 * `max-age=600, stale-while-revalidate=86400` - Will be cached for 10 minutes and then refreshed in the background if the item is accessed again within a time window of 1 day
+* `max-age=0` - Will not be cached
 * `no-cache, no-store, must-revalidate` - Will not be cached
 * `private` - Will not be cached
 * `public` - Will be cached using default `maxAge` and `staleWhileRevalidate` options
