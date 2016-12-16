@@ -652,3 +652,16 @@ test("do not cache with a cache-control header equal to 'max-age=0'", function(t
   t.notOk(cache.get("a"))
   t.end()
 })
+
+test("do not cache with a cache-control header equal to 'max-age=0' and override instance defaults", function(t) {
+  var cache = new LRU({
+    maxAge: 50 / 1000
+  })
+  t.ok(cache.set("a", "A"))
+  t.ok(cache.has("a"))
+  t.equal(cache.get("a"), "A")
+  t.notOk(cache.set("b", "B", "max-age=0"))
+  t.notOk(cache.has("b"))
+  t.notOk(cache.get("b"))
+  t.end()
+})
