@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/npm/l/stale-lru-cache.svg)](https://www.npmjs.com/package/stale-lru-cache)
 [![Build Status](https://travis-ci.org/cyberthom/stale-lru-cache.svg?branch=master)](https://travis-ci.org/cyberthom/stale-lru-cache)
 [![Test Coverage](https://coveralls.io/repos/cyberthom/stale-lru-cache/badge.svg?branch=master&service=github)](https://coveralls.io/github/cyberthom/stale-lru-cache?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/npm/stale-lru-cache/badge.svg)](https://snyk.io/test/npm/stale-lru-cache)
 
 Resilient and performant in-memory cache for node.js.
 
